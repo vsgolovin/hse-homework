@@ -80,17 +80,20 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
                 + ((y[i + 1] - y[i])**2) / (mu * (x[i + 1] - x[i]))
                 - 2 * (y[i + 1] + y[i]))
 
+    def difference(i):
+        return abs(y[i + 1] - y[i]) / (x[i + 1] - x[i])
+
     # точность по умолчанию
     if atol is None:
         atol = (b - a) * 1e-4
 
     x = [a, b]
     y = [f(a), f(b)]
+    diff = [difference(0)]
 
     while True:
         # оценка глобальной константы Липшица
-        H = max(abs(y[i + 1] - y[i]) / (x[i + 1] - x[i])
-                for i in range(len(x) - 1))
+        H = max(diff)
         mu = 1 if H < 1e-7 else H * r
 
         # выбор подынтервала
@@ -114,6 +117,8 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
         x_new = (x[i] + x[i + 1]) / 2 - (y[i + 1] - y[i]) / (2 * mu)
         x.insert(i + 1, x_new)
         y.insert(i + 1, f(x_new))
+        diff[i] = difference(i)
+        diff.insert(i + 1, difference(i + 1))
 
     # найдём минимум
     i_min = 0
