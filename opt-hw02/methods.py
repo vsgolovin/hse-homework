@@ -4,7 +4,7 @@ from collections import namedtuple
 OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
 
 
-def minimize_na(f, a, b, L, atol=1e-5, maxfev=100000, full_output=False):
+def minimize_NA(f, a, b, L, atol=1e-5, maxfev=100000, full_output=False):
     """
     Найти на на отрезке [`a`, `b`] минимум функции `f` с помощью метода
     ломаных (недифференцируемая целевая функция, априорно заданная оценка
