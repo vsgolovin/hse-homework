@@ -1,14 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from test_functions import test_functions
-from methods import minimize_ING
+from methods import minimize_NG
 
 
 def main():
     for i, tf in enumerate(test_functions):
         a, b = tf.interval
         eps = 1e-4 * (b - a)
-        res = minimize_ING(tf.f, a, b, r=2.0, atol=eps, full_output=True)
+        res = minimize_NG(tf.f, a, b, r=2.0, atol=eps, full_output=True)
         x = np.linspace(a, b, 500)
         y = tf.f(x)
 

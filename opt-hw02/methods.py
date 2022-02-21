@@ -68,6 +68,74 @@ def minimize_NA(f, a, b, L, atol=1e-5, maxfev=30000, full_output=False):
     return OptimizeResult(x_min, x_full, y_full, len(y))
 
 
+def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум функции `f` с помощью геометрического
+    метода с адаптивным оцениваением глобальной константы Липшица. Точность
+    метода и максимальное количество вызовов функции задаются параметрами
+    `atol` и `maxfev`, соответственно.
+    """
+    def new_point(i):
+        return (x[i] + x[i + 1]) / 2 - (y[i + 1] - y[i]) / (2 * L)
+
+    def characteristic(i):
+        return (y[i] + y[i + 1]) / 2 - L * (x[i + 1] - x[i]) / 2
+
+    def difference(i):
+        return abs(y[i + 1] - y[i]) / (x[i + 1] - x[i])
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+    diff = [difference(0)]
+
+    while True:
+        # оценка глобальной константы Липшица
+        H = max(diff)
+        L = 1 if H < 1e-7 else H * r
+        F = [characteristic(i) for i in range(len(y) - 1)]
+
+        # выбор подынтервала
+        i_best = 0
+        F_best = F[0]
+        for i in range(1, len(F)):
+            if F[i] < F_best:
+                i_best = i
+                F_best = F[i]
+        i = i_best
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x_new = new_point(i)
+        x.insert(i + 1, x_new)
+        y.insert(i + 1, f(x_new))
+        diff[i] = difference(i)
+        diff.insert(i + 1, difference(i + 1))
+
+    # найдём минимум
+    i_min = 0
+    y_min = y[0]
+    for i, yi in enumerate(y):
+        if yi < y_min:
+            i_min = i
+            y_min = yi
+    x_min = x[i_min]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
+
+
 def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     """
     Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
