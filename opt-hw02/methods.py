@@ -4,7 +4,7 @@ from collections import namedtuple
 OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
 
 
-def minimize_NA(f, a, b, L, atol=1e-5, maxfev=30000, full_output=False):
+def minimize_NA(f, a, b, L, atol=None, maxfev=30000, full_output=False):
     """
     Найти на на отрезке [`a`, `b`] минимум функции `f` с помощью метода
     ломаных (недифференцируемая целевая функция, априорно заданная оценка
@@ -15,6 +15,10 @@ def minimize_NA(f, a, b, L, atol=1e-5, maxfev=30000, full_output=False):
 
     def characteristic(i):
         return (y[i] + y[i + 1]) / 2 - L * (x[i + 1] - x[i]) / 2
+
+    # точность по умолчанию
+    if atol is None:
+        atol = 1e-4 * (b - a)
 
     x = [a, b]               # точки разбиения интервала
     y = [f(a), f(b)]         # значения функции в этих точках
@@ -45,15 +49,13 @@ def minimize_NA(f, a, b, L, atol=1e-5, maxfev=30000, full_output=False):
         y.insert(i + 1, f(x_m[i]))
 
         # меняем характеристику старого интервала на характеристики двух новых
-        x_m.pop(i)
-        F.pop(i)
-        x_m.insert(i, new_point(i))
+        x_m[i] = new_point(i)
         x_m.insert(i + 1, new_point(i + 1))
-        F.insert(i, characteristic(i))
+        F[i] = characteristic(i)
         F.insert(i + 1, characteristic(i + 1))
 
     # возвращаем результат
-    x_min = (x[i] + x[i + 1]) / 2 - (y[i + 1] - y[i]) / (2 * L)
+    x_min = x[i] if y[i] < y[i + 1] else x[i + 1]
     if not full_output:
         return x_min
     x_full = []
@@ -123,7 +125,7 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
 
         # оценка глобальной константы Липшица
         k = i if diff[i] > diff[i + 1] else i + 1
-        if diff[k] > H:  # H нужно изменить
+        if diff[k] > H:  # обновляем все значения F
             H = diff[k]
             L = 1 if H < 1e-7 else H * r
             F = [characteristic(i) for i in range(len(y) - 1)]
@@ -169,13 +171,13 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     y = [f(a), f(b)]
     diff = [difference(0)]
 
-    while True:
-        # оценка глобальной константы Липшица
-        H = max(diff)
-        mu = 1 if H < 1e-7 else H * r
+    # начальная оценка глобальной константы Липшица
+    H = diff[0]
+    mu = 1 if H < 1e-7 else H * r
+    R = [characteristic(0)]
 
+    while True:
         # выбор подынтервала
-        R = [characteristic(i) for i in range(len(y) - 1)]
         i_best = 0
         R_best = R[0]
         for i in range(1, len(R)):
@@ -197,6 +199,16 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
         y.insert(i + 1, f(x_new))
         diff[i] = difference(i)
         diff.insert(i + 1, difference(i + 1))
+
+        # оценка глобальной константы Липшица
+        k = i if diff[i] > diff[i + 1] else i + 1
+        if diff[k] > H:  # обновляем все значения R
+            H = diff[k]
+            mu = 1 if H < 1e-7 else H * r
+            R = [characteristic(i) for i in range(len(y) - 1)]
+        else:  # обновляем R только на новых интервалах
+            R[i] = characteristic(i)
+            R.insert(i + 1, characteristic(i + 1))
 
     # найдём минимум
     i_min = 0
