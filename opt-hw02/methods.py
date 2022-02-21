@@ -88,16 +88,16 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     if atol is None:
         atol = (b - a) * 1e-4
 
-    x = [a, b]
-    y = [f(a), f(b)]
-    diff = [difference(0)]
+    x = [a, b]                     # границы интервалов
+    y = [f(a), f(b)]               # значения функции в x
+    diff = [difference(0)]         # абсолютные приращения
+
+    # начальная оценка константы Липшица
+    H = diff[0]
+    L = 1 if H < 1e-7 else H * r
+    F = [characteristic(0)]
 
     while True:
-        # оценка глобальной константы Липшица
-        H = max(diff)
-        L = 1 if H < 1e-7 else H * r
-        F = [characteristic(i) for i in range(len(y) - 1)]
-
         # выбор подынтервала
         i_best = 0
         F_best = F[0]
@@ -120,6 +120,16 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
         y.insert(i + 1, f(x_new))
         diff[i] = difference(i)
         diff.insert(i + 1, difference(i + 1))
+
+        # оценка глобальной константы Липшица
+        k = i if diff[i] > diff[i + 1] else i + 1
+        if diff[k] > H:  # H нужно изменить
+            H = diff[k]
+            L = 1 if H < 1e-7 else H * r
+            F = [characteristic(i) for i in range(len(y) - 1)]
+        else:  # обновляем F только на новых интервалах
+            F[i] = characteristic(i)
+            F.insert(i + 1, characteristic(i + 1))
 
     # найдём минимум
     i_min = 0
