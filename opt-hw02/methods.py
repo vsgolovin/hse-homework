@@ -4,7 +4,7 @@ from collections import namedtuple
 OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
 
 
-def minimize_NA(f, a, b, L, atol=1e-5, maxfev=100000, full_output=False):
+def minimize_NA(f, a, b, L, atol=1e-5, maxfev=30000, full_output=False):
     """
     Найти на на отрезке [`a`, `b`] минимум функции `f` с помощью метода
     ломаных (недифференцируемая целевая функция, априорно заданная оценка
@@ -66,3 +66,65 @@ def minimize_NA(f, a, b, L, atol=1e-5, maxfev=100000, full_output=False):
     x_full.append(x[-1])
     y_full.append(y[-1])
     return OptimizeResult(x_min, x_full, y_full, len(y))
+
+
+def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
+    статистического метода с адаптивным оцениваением глобальной константы
+    Липшица. Точность метода и максимальное количество вызовов функции задаются
+    параметрами `atol` и `maxfev`, соответственно.
+    """
+    def characteristic(i):
+        return (mu * (x[i + 1] - x[i])
+                + ((y[i + 1] - y[i])**2) / (mu * (x[i + 1] - x[i]))
+                - 2 * (y[i + 1] + y[i]))
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+
+    while True:
+        # оценка глобальной константы Липшица
+        H = max(abs(y[i + 1] - y[i]) / (x[i + 1] - x[i])
+                for i in range(len(x) - 1))
+        mu = 1 if H < 1e-7 else H * r
+
+        # выбор подынтервала
+        R = [characteristic(i) for i in range(len(y) - 1)]
+        i_best = 0
+        R_best = R[0]
+        for i in range(1, len(R)):
+            if R[i] > R_best:
+                i_best = i
+                R_best = R[i]
+        i = i_best
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x_new = (x[i] + x[i + 1]) / 2 - (y[i + 1] - y[i]) / (2 * mu)
+        x.insert(i + 1, x_new)
+        y.insert(i + 1, f(x_new))
+
+    # найдём минимум
+    i_min = 0
+    y_min = y[0]
+    for i, yi in enumerate(y):
+        if yi < y_min:
+            i_min = i
+            y_min = yi
+    x_min = x[i_min]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
