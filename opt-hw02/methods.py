@@ -2,9 +2,10 @@ from collections import namedtuple
 
 
 OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
+MAXFEV = 3000
 
 
-def minimize_NA(f, a, b, L, atol=None, maxfev=30000, full_output=False):
+def minimize_NA(f, a, b, L, atol=None, maxfev=MAXFEV, full_output=False):
     """
     Найти на на отрезке [`a`, `b`] минимум функции `f` с помощью метода
     ломаных (недифференцируемая целевая функция, априорно заданная оценка
@@ -70,7 +71,7 @@ def minimize_NA(f, a, b, L, atol=None, maxfev=30000, full_output=False):
     return OptimizeResult(x_min, x_full, y_full, len(y))
 
 
-def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
+def minimize_NG(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
     """
     Найти на отрезке [`a`, `b`] минимум функции `f` с помощью геометрического
     метода с адаптивным оцениваением глобальной константы Липшица. Точность
@@ -148,7 +149,7 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     return OptimizeResult(x_min, x, y, len(y))
 
 
-def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
+def minimize_ING(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
     """
     Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
     статистического метода с адаптивным оцениваением глобальной константы
@@ -225,7 +226,7 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     return OptimizeResult(x_min, x, y, len(y))
 
 
-def minimize_ING2(f, a, b, r, atol=None, maxfev=3000, full_output=False):
+def minimize_ING2(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
     """
     Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
     статистического метода с адаптивным оцениваением глобальной константы
@@ -287,6 +288,72 @@ def minimize_ING2(f, a, b, r, atol=None, maxfev=3000, full_output=False):
         else:  # обновляем R только на новых интервалах
             R[i] = characteristic(i)
             R.insert(i + 1, characteristic(i + 1))
+
+    # найдём минимум
+    i_min = 0
+    y_min = y[0]
+    for i, yi in enumerate(y):
+        if yi < y_min:
+            i_min = i
+            y_min = yi
+    x_min = x[i_min]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
+
+
+def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
+    """
+    """
+    def new_point(i):
+        return (x[i + 1] + x[i]) / 2 - (y[i + 1] - y[i]) / (2 * mu[i])
+
+    def characteristic(i):
+        return (y[i + 1] + y[i]) / 2 - mu[i] * (x[i + 1] - x[i]) / 2
+
+    x = [a, b]
+    y = [f(a), f(b)]
+
+    while True:
+        # оценка локальных конствант Липшица
+        dx = [x[i + 1] - x[i] for i in range(len(y) - 1)]
+        diff = [abs(y[i + 1] - y[i]) / dx[i] for i in range(len(dx))]
+        lam = [None] * (len(y) - 1)
+        for i in range(len(y) - 1):
+            i1 = max(0, i - 1)
+            i2 = min(len(y),  i + 2)
+            lam[i] = max(diff[i1:i2])
+        lam_max = max(lam)
+        X_max = max(dx)
+        gamma = [lam_max * dx_i / X_max for dx_i in dx]
+        mu = [r * max(lam[i], gamma[i], xi) for i in range(len(lam))]
+
+        # вычисление характеристик
+        R = [characteristic(i) for i in range(len(y) - 1)]
+
+        # выбор подынтервала
+        i_best = 0
+        R_best = R[0]
+        for i in range(1, len(R)):
+            if R[i] < R_best:
+                R_best = R[i]
+                i_best = i
+        i = i_best
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x_new = new_point(i)
+        y_new = f(x_new)
+        x.insert(i + 1, x_new)
+        y.insert(i + 1, y_new)
 
     # найдём минимум
     i_min = 0
