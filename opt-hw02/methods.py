@@ -407,3 +407,69 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
     if not full_output:
         return x_min
     return OptimizeResult(x_min, x, y, len(y))
+
+
+def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
+    статистического метода с адаптивным оцениваением локальной константы
+    Липшица. Точность метода и максимальное количество вызовов функции задаются
+    параметрами `atol` и `maxfev`, соответственно.
+    """
+    x = [a, b]
+    y = [f(a), f(b)]
+
+    while True:
+        # оценка локальных констант Липшица
+        dx = [x[i + 1] - x[i] for i in range(len(x) - 1)]
+        dy = [abs(y[i + 1] - y[i]) for i in range(len(y) - 1)]
+        X_max = max(dx)
+        diff = [dy[i] / dx[i] for i in range(len(dx))]
+        diff_max = max(diff)
+        lam = [None] * len(dx)
+        for j in range(len(dx)):
+            j1 = max(0, j - 1)
+            j2 = min(len(y), j + 2)
+            lam[j] = max(diff[j1:j2])
+        gamma = [diff_max * (x[i + 1] - x[i]) / X_max for i in range(len(dx))]
+        H = [max(lam[j], gamma[j], xi) for j in range(len(lam))]
+        mu = [r * Hj for Hj in H]
+
+        # вычисление характеристик
+        R = [mu[j] * dx[j] + dy[j]**2 / (dx[j] * mu[j]) - 2 * (y[j + 1] + y[j])
+             for j in range(len(dx))]
+
+        # выбор подынтервала
+        i_best = 0
+        R_best = R[0]
+        for i in range(1, len(R)):
+            if R[i] > R_best:
+                R_best = R[i]
+                i_best = i
+        i = i_best
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x_new = 0.5 * (x[i + 1] + x[i] - (y[i + 1] - y[i]) / mu[i])
+        x.insert(i + 1, x_new)
+        y.insert(i + 1, f(x_new))
+
+    # найдём минимум
+    i_min = 0
+    y_min = y[0]
+    for i, yi in enumerate(y):
+        if yi < y_min:
+            i_min = i
+            y_min = yi
+    x_min = x[i_min]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
