@@ -306,6 +306,10 @@ def minimize_ING2(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
 
 def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
     """
+    Найти на отрезке [`a`, `b`] минимум функции `f` с помощью геометрического
+    метода с адаптивым оцениваением локальных констант Липшица. Точность метода
+    и максимальное количество вызовов функции задаются параметрами `atol` и
+    `maxfev`, соответственно.
     """
     def new_point(i):
         return (x[i + 1] + x[i]) / 2 - (y[i + 1] - y[i]) / (2 * mu[i])
@@ -313,26 +317,24 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
     def characteristic(i):
         return (y[i + 1] + y[i]) / 2 - mu[i] * (x[i + 1] - x[i]) / 2
 
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
     x = [a, b]
     y = [f(a), f(b)]
 
+    # оценка локальной константы Липшица и характеристики первого интервала
+    dx = [b - a]
+    diff = [abs(y[1] - y[0]) / dx[0]]
+    X_max = dx[0]
+    lam = [diff[0]]
+    lam_max = lam[0]
+    gamma = [lam_max * dx[0] / X_max]
+    mu = [r * max(lam[0], gamma[0], xi)]
+    R = [characteristic(0)]
+
     while True:
-        # оценка локальных конствант Липшица
-        dx = [x[i + 1] - x[i] for i in range(len(y) - 1)]
-        diff = [abs(y[i + 1] - y[i]) / dx[i] for i in range(len(dx))]
-        lam = [None] * (len(y) - 1)
-        for i in range(len(y) - 1):
-            i1 = max(0, i - 1)
-            i2 = min(len(y),  i + 2)
-            lam[i] = max(diff[i1:i2])
-        lam_max = max(lam)
-        X_max = max(dx)
-        gamma = [lam_max * dx_i / X_max for dx_i in dx]
-        mu = [r * max(lam[i], gamma[i], xi) for i in range(len(lam))]
-
-        # вычисление характеристик
-        R = [characteristic(i) for i in range(len(y) - 1)]
-
         # выбор подынтервала
         i_best = 0
         R_best = R[0]
@@ -350,10 +352,47 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
                 f'Решение не сошлось после {maxfev} вызовов целевой функции.')
 
         # новое испытание
-        x_new = new_point(i)
-        y_new = f(x_new)
-        x.insert(i + 1, x_new)
-        y.insert(i + 1, y_new)
+        x.insert(i + 1, new_point(i))
+        y.insert(i + 1, f(x[i + 1]))
+
+        # оценка локальных констант Липшица и характеристик
+        update_gamma = False  # обновлять ли все значения gamma
+        if dx[i] == X_max:    # удалим самый длинный интервал
+            X_max = None
+            update_gamma = True
+        dx[i] = x[i + 1] - x[i]
+        dx.insert(i + 1, x[i + 2] - x[i + 1])
+        k = i if dx[i] > dx[i + 1] else i + 1
+        if X_max is None:
+            X_max = max(dx)
+        elif dx[k] > X_max:
+            X_max = dx[k]
+            update_gamma = True
+
+        # обновляем lam
+        diff[i] = abs(y[i + 1] - y[i]) / dx[i]
+        diff.insert(i + 1, abs(y[i + 2] - y[i + 1]) / dx[i + 1])
+        lam.insert(i + 1, None)
+        for j in range(max(0, i - 1), min(i + 3, len(lam))):
+            j1 = max(0, j - 1)
+            j2 = min(j + 2, len(lam))
+            lam[j] = max(diff[j1:j2])
+            if lam[j] > lam_max:
+                lam_max = lam[j]
+                update_gamma = True
+
+        if update_gamma:  # обновить все значения
+            gamma = [lam_max * dx_i / X_max for dx_i in dx]
+            mu = [r * max(lam[i], gamma[i], xi) for i in range(len(lam))]
+            R = [characteristic(i) for i in range(len(y) - 1)]
+        else:  # обновить только значения, измененные новыми интервалами
+            gamma.insert(i + 1, None)
+            mu.insert(i + 1, None)
+            R.insert(i + 1, None)
+            for j in range(max(0, i - 1), min(i + 3, len(lam))):
+                gamma[j] = lam_max * dx[j] / X_max
+                mu[j] = r * max(lam[j], gamma[j], xi)
+                R[j] = characteristic(j)
 
     # найдём минимум
     i_min = 0
