@@ -223,3 +223,81 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=30000, full_output=False):
     if not full_output:
         return x_min
     return OptimizeResult(x_min, x, y, len(y))
+
+
+def minimize_ING2(f, a, b, r, atol=None, maxfev=3000, full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум функции `f` с помощью информационно-
+    статистического метода с адаптивным оцениваением глобальной константы
+    Липшица. Точность метода и максимальное количество вызовов функции задаются
+    параметрами `atol` и `maxfev`, соответственно.
+    """
+    def characteristic(i):
+        return -4 * ((y[i] + y[i + 1]) / 2 - L * (x[i + 1] - x[i]) / 2)
+
+    def difference(i):
+        return abs(y[i + 1] - y[i]) / (x[i + 1] - x[i])
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+    diff = [difference(0)]
+
+    # начальная оценка глобальной константы Липшица
+    H = diff[0]
+    mu = 1 if H < 1e-7 else H * r
+    L = 0.5 * (mu + 1 / mu * ((y[1] - y[0]) / (b - a))**2)
+    R = [characteristic(0)]
+
+    while True:
+        # выбор подынтервала
+        i_best = 0
+        R_best = R[0]
+        for i in range(1, len(R)):
+            if R[i] > R_best:
+                i_best = i
+                R_best = R[i]
+        i = i_best
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x_new = (x[i] + x[i + 1]) / 2 - (y[i + 1] - y[i]) / (2 * L)
+        x.insert(i + 1, x_new)
+        y.insert(i + 1, f(x_new))
+        diff[i] = difference(i)
+        diff.insert(i + 1, difference(i + 1))
+
+        # оценка глобальной константы Липшица
+        k = i if diff[i] > diff[i + 1] else i + 1
+        if diff[k] > H:  # обновляем все значения R
+            H = diff[k]
+            mu = 1 if H < 1e-7 else H * r
+            L = 0.5 * (mu
+                       + 1 / mu * ((y[k + 1] - y[k]) / (x[k + 1] - x[k]))**2)
+            R = [characteristic(i) for i in range(len(y) - 1)]
+        else:  # обновляем R только на новых интервалах
+            R[i] = characteristic(i)
+            R.insert(i + 1, characteristic(i + 1))
+
+    # найдём минимум
+    i_min = 0
+    y_min = y[0]
+    for i, yi in enumerate(y):
+        if yi < y_min:
+            i_min = i
+            y_min = yi
+    x_min = x[i_min]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
