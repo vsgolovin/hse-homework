@@ -5,6 +5,32 @@ OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
 MAXFEV = 3000
 
 
+def argmax(iterable):
+    """
+    Возвращает индекс максимального элемента.
+    """
+    i_max = None
+    x_max = None
+    for i, x in enumerate(iterable):
+        if x_max is None or x > x_max:
+            x_max = x
+            i_max = i
+    return i_max
+
+
+def argmin(iterable):
+    """
+    Возвращает индекс максимального элемента.
+    """
+    i_min = None
+    x_min = None
+    for i, x in enumerate(iterable):
+        if x_min is None or x < x_min:
+            x_min = x
+            i_min = i
+    return i_min
+
+
 def minimize_NA(f, a, b, L, atol=None, maxfev=MAXFEV, full_output=False):
     """
     Найти на на отрезке [`a`, `b`] минимум функции `f` с помощью метода
@@ -28,13 +54,7 @@ def minimize_NA(f, a, b, L, atol=None, maxfev=MAXFEV, full_output=False):
 
     while True:
         # найдём интервал с минимальной характеристикой
-        i_min = 0  # номер интервала
-        F_min = F[0]
-        for i in range(1, len(F)):
-            if F[i] < F_min:
-                i_min = i
-                F_min = F[i]
-        i = i_min
+        i = argmin(F)
 
         # проверим условие остановки по точности
         if x[i + 1] - x[i] <= atol:
@@ -102,13 +122,7 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
 
     while True:
         # выбор подынтервала
-        i_best = 0
-        F_best = F[0]
-        for i in range(1, len(F)):
-            if F[i] < F_best:
-                i_best = i
-                F_best = F[i]
-        i = i_best
+        i = argmin(F)
 
         # условия остановки
         if x[i + 1] - x[i] <= atol:
@@ -135,13 +149,7 @@ def minimize_NG(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
             F.insert(i + 1, characteristic(i + 1))
 
     # найдём минимум
-    i_min = 0
-    y_min = y[0]
-    for i, yi in enumerate(y):
-        if yi < y_min:
-            i_min = i
-            y_min = yi
-    x_min = x[i_min]
+    x_min = x[argmin(y)]
 
     # возвращаем результат
     if not full_output:
@@ -179,13 +187,7 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
 
     while True:
         # выбор подынтервала
-        i_best = 0
-        R_best = R[0]
-        for i in range(1, len(R)):
-            if R[i] > R_best:
-                i_best = i
-                R_best = R[i]
-        i = i_best
+        i = argmax(R)
 
         # условия остановки
         if x[i + 1] - x[i] <= atol:
@@ -212,13 +214,7 @@ def minimize_ING(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
             R.insert(i + 1, characteristic(i + 1))
 
     # найдём минимум
-    i_min = 0
-    y_min = y[0]
-    for i, yi in enumerate(y):
-        if yi < y_min:
-            i_min = i
-            y_min = yi
-    x_min = x[i_min]
+    x_min = x[argmin(y)]
 
     # возвращаем результат
     if not full_output:
@@ -255,13 +251,7 @@ def minimize_ING2(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
 
     while True:
         # выбор подынтервала
-        i_best = 0
-        R_best = R[0]
-        for i in range(1, len(R)):
-            if R[i] > R_best:
-                i_best = i
-                R_best = R[i]
-        i = i_best
+        i = argmax(R)
 
         # условия остановки
         if x[i + 1] - x[i] <= atol:
@@ -290,13 +280,7 @@ def minimize_ING2(f, a, b, r, atol=None, maxfev=MAXFEV, full_output=False):
             R.insert(i + 1, characteristic(i + 1))
 
     # найдём минимум
-    i_min = 0
-    y_min = y[0]
-    for i, yi in enumerate(y):
-        if yi < y_min:
-            i_min = i
-            y_min = yi
-    x_min = x[i_min]
+    x_min = x[argmin(y)]
 
     # возвращаем результат
     if not full_output:
@@ -336,13 +320,7 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
 
     while True:
         # выбор подынтервала
-        i_best = 0
-        R_best = R[0]
-        for i in range(1, len(R)):
-            if R[i] < R_best:
-                R_best = R[i]
-                i_best = i
-        i = i_best
+        i = argmin(R)
 
         # условия остановки
         if x[i + 1] - x[i] <= atol:
@@ -395,13 +373,7 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
                 R[j] = characteristic(j)
 
     # найдём минимум
-    i_min = 0
-    y_min = y[0]
-    for i, yi in enumerate(y):
-        if yi < y_min:
-            i_min = i
-            y_min = yi
-    x_min = x[i_min]
+    x_min = x[argmin(y)]
 
     # возвращаем результат
     if not full_output:
@@ -440,13 +412,7 @@ def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
              for j in range(len(dx))]
 
         # выбор подынтервала
-        i_best = 0
-        R_best = R[0]
-        for i in range(1, len(R)):
-            if R[i] > R_best:
-                R_best = R[i]
-                i_best = i
-        i = i_best
+        i = argmax(R)
 
         # условия остановки
         if x[i + 1] - x[i] <= atol:
@@ -461,13 +427,7 @@ def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
         y.insert(i + 1, f(x_new))
 
     # найдём минимум
-    i_min = 0
-    y_min = y[0]
-    for i, yi in enumerate(y):
-        if yi < y_min:
-            i_min = i
-            y_min = yi
-    x_min = x[i_min]
+    x_min = x[argmin(y)]
 
     # возвращаем результат
     if not full_output:
