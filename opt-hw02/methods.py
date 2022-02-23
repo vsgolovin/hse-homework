@@ -334,10 +334,10 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
         y.insert(i + 1, f(x[i + 1]))
 
         # оценка локальных констант Липшица и характеристик
-        update_gamma = False  # обновлять ли все значения gamma
-        if dx[i] == X_max:    # удалим самый длинный интервал
+        full_update = False  # обновлять ли все значения
+        if dx[i] == X_max:   # разбиваем самый длинный интервал
             X_max = None
-            update_gamma = True
+            full_update = True
         dx[i] = x[i + 1] - x[i]
         dx.insert(i + 1, x[i + 2] - x[i + 1])
         k = i if dx[i] > dx[i + 1] else i + 1
@@ -345,7 +345,7 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
             X_max = max(dx)
         elif dx[k] > X_max:
             X_max = dx[k]
-            update_gamma = True
+            full_update = True
 
         # обновляем lam
         diff[i] = abs(y[i + 1] - y[i]) / dx[i]
@@ -357,9 +357,9 @@ def minimize_NL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
             lam[j] = max(diff[j1:j2])
             if lam[j] > lam_max:
                 lam_max = lam[j]
-                update_gamma = True
+                full_update = True
 
-        if update_gamma:  # обновить все значения
+        if full_update:  # обновить все значения
             gamma = [lam_max * dx_i / X_max for dx_i in dx]
             mu = [r * max(lam[i], gamma[i], xi) for i in range(len(lam))]
             R = [characteristic(i) for i in range(len(y) - 1)]
@@ -388,29 +388,28 @@ def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
     Липшица. Точность метода и максимальное количество вызовов функции задаются
     параметрами `atol` и `maxfev`, соответственно.
     """
+    def characteristic(i):
+        return (mu[i] * dx[i] + (y[i + 1] - y[i])**2 / (dx[i] * mu[i])
+                - 2 * (y[i + 1] + y[i]))
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
     x = [a, b]
     y = [f(a), f(b)]
 
+    # оценка локальной константы Липшица и характеристики первого интервала
+    dx = [b - a]
+    X_max = dx[0]
+    diff = [abs(y[1] - y[0]) / dx[0]]
+    diff_max = diff[0]
+    lam = [diff[0]]
+    gamma = [diff_max]
+    mu = [r * max(lam[0], gamma[0], xi)]
+    R = [characteristic(0)]
+
     while True:
-        # оценка локальных констант Липшица
-        dx = [x[i + 1] - x[i] for i in range(len(x) - 1)]
-        dy = [abs(y[i + 1] - y[i]) for i in range(len(y) - 1)]
-        X_max = max(dx)
-        diff = [dy[i] / dx[i] for i in range(len(dx))]
-        diff_max = max(diff)
-        lam = [None] * len(dx)
-        for j in range(len(dx)):
-            j1 = max(0, j - 1)
-            j2 = min(len(y), j + 2)
-            lam[j] = max(diff[j1:j2])
-        gamma = [diff_max * (x[i + 1] - x[i]) / X_max for i in range(len(dx))]
-        H = [max(lam[j], gamma[j], xi) for j in range(len(lam))]
-        mu = [r * Hj for Hj in H]
-
-        # вычисление характеристик
-        R = [mu[j] * dx[j] + dy[j]**2 / (dx[j] * mu[j]) - 2 * (y[j + 1] + y[j])
-             for j in range(len(dx))]
-
         # выбор подынтервала
         i = argmax(R)
 
@@ -425,6 +424,55 @@ def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
         x_new = 0.5 * (x[i + 1] + x[i] - (y[i + 1] - y[i]) / mu[i])
         x.insert(i + 1, x_new)
         y.insert(i + 1, f(x_new))
+
+        # оценка локальных констант Липшица и характеристик
+        full_update = False  # обновлять ли все значения
+
+        # обновляем dx
+        if dx[i] == X_max:
+            X_max = None
+            full_update = True
+        dx[i] = x[i + 1] - x[i]
+        dx.insert(i + 1, x[i + 2] - x[i + 1])
+        k = i if dx[i] > dx[i + 1] else i + 1
+        if X_max is None:
+            X_max = max(dx)
+        elif dx[k] > X_max:
+            X_max = dx[k]
+            full_update = True
+
+        # обновляем diff
+        if diff[i] == diff_max:
+            full_update = True
+            diff_max = None
+        diff[i] = abs(y[i + 1] - y[i]) / dx[i]
+        diff.insert(i + 1, abs(y[i + 2] - y[i + 1]) / dx[i + 1])
+        k = i if diff[i] > diff[i + 1] else i + 1
+        if diff_max is None:
+            diff_max = max(diff)
+        elif diff[k] > diff_max:
+            diff_max = diff[k]
+            full_update = True
+
+        # обновляем lam
+        lam.insert(i + 1, None)
+        for j in range(max(0, i - 1), min(i + 3, len(lam))):
+            j1 = max(0, j - 1)
+            j2 = min(j + 2, len(lam))
+            lam[j] = max(diff[j1:j2])
+
+        if full_update:  # обновить все значения
+            gamma = [diff_max * dx_i / X_max for dx_i in dx]
+            mu = [r * max(lam[i], gamma[i], xi) for i in range(len(lam))]
+            R = [characteristic(i) for i in range(len(y) - 1)]
+        else:  # обновить только значения, измененный новыми интервалами
+            gamma.insert(i + 1, None)
+            mu.insert(i + 1, None)
+            R.insert(i + 1, None)
+            for j in range(max(0, i - 1), min(i + 3, len(lam))):
+                gamma[j] = diff_max * dx[j] / X_max
+                mu[j] = r * max(lam[j], gamma[j], xi)
+                R[j] = characteristic(j)
 
     # найдём минимум
     x_min = x[argmin(y)]
