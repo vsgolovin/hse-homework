@@ -1,4 +1,5 @@
 from collections import namedtuple
+import numpy as np
 
 
 OptimizeResult = namedtuple('OptimizeResult', ['x_min', 'x', 'y', 'nfev'])
@@ -538,6 +539,121 @@ def minimize_DGN(f, fdot, a, b, r, atol=None, maxfev=MAXFEV,
         x.insert(i + 1, new_point(i))
         y.insert(i + 1, f(x[i + 1]))
         y_dot.insert(i + 1, fdot(x[i + 1]))
+
+    # найдём минимум
+    x_min = x[argmin(y)]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    # возвращаем график миноранты
+    x_hat = [new_point(i) for i in range(len(y) - 1)]
+    x_full = []
+    y_full = []
+    for i in range(len(y) - 1):
+        x_full.append(x[i])
+        x_full.append(x_hat[i])
+        y_full.append(y[i])
+        y_full.append(R[i])
+    x_full.append(x[-1])
+    y_full.append(y[-1])
+    return OptimizeResult(x_min, x_full, y_full, len(y))
+
+
+def minimize_DLN(f, fdot, a, b, r, xi, atol=None, maxfev=MAXFEV,
+                 full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум дифференцируемой функции `f` с помощью
+    метода с адаптивным оцениваением локальных констант Липшица. Точность
+    метода и максимальное количество вызовов функции задаются параметрами
+    `atol` и `maxfev`, соответственно.
+    """
+    def calculate_tau(i, pt):
+        dx_f = pt - x[i]
+        dx_b = pt - x[i + 1]
+        return 2 * abs(y[i + 1] - y[i] + y_dot[i + 1] * dx_b
+                       - y_dot[i] * dx_f) / (dx_b**2 + dx_f**2)
+
+    def calculate_nu(i):
+        if abs(y_dot[i] - y_dot[i + 1]) < 1e-6:
+            return calculate_tau(i, (x[i] + x[i + 1]) / 2)
+        d = 0.5 * np.sqrt(
+            (2 * (y[i] - y[i + 1]) + (y_dot[i + 1] + y_dot[i]) * dx[i])**2
+            + (y_dot[i + 1] - y_dot[i])**2 * dx[i]**2
+            )
+        d_minus = x[i] + ((y[i] - y[i + 1] + y_dot[i + 1] * dx[i] - d)
+                          / (y_dot[i + 1] - y_dot[i]))
+        if x[i] <= d_minus <= x[i + 1]:
+            tau_minus = calculate_tau(i, d_minus)
+        else:
+            tau_minus = -np.inf
+        d_plus = x[i] + ((y[i] - y[i + 1] + y_dot[i + 1] * dx[i] + d)
+                         / (y_dot[i + 1] - y_dot[i]))
+        if x[i] <= d_plus <= x[i + 1]:
+            tau_plus = calculate_tau(i, d_plus)
+        else:
+            tau_plus = -np.inf
+        return max(
+            calculate_tau(i, x[i]),
+            calculate_tau(i, x[i + 1]),
+            tau_minus,
+            tau_plus
+        )
+
+    def calculate_m(i):
+        i1 = max(0, i - 1)
+        i2 = min(len(nu), i + 2)
+        lam = max(nu[i1:i2])
+        gamma = max(nu) * dx[i] / max(dx)
+        return r * max(lam, gamma, xi)
+
+    def new_point(i):
+        return ((-y[i + 1] + y[i] + y_dot[i + 1] * x[i + 1] - y_dot[i] * x[i]
+                 + 0.5 * m[i] * (x[i + 1]**2 - x[i]**2))
+                / (m[i] * dx[i] + y_dot[i + 1] - y_dot[i]))
+
+    def characteristic(i):
+        x_hat = new_point(i)
+        return min(
+            y[i],
+            y[i + 1],
+            y[i] + y_dot[i] * (x_hat - x[i]) - 0.5 * m[i] * (x_hat - x[i])**2
+        )
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+    dx = [b - a]
+    y_dot = [fdot(a), fdot(b)]
+    nu = [calculate_nu(0)]
+
+    while True:
+        # оценка локальных констант Липшица для производной
+        m = [calculate_m(i) for i in range(len(y) - 1)]
+
+        # вычисление характеристик
+        R = [characteristic(i) for i in range(len(y) - 1)]
+
+        # выбор интервала для разбиения
+        i = argmin(R)
+
+        # условия остановки
+        if dx[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x.insert(i + 1, new_point(i))
+        y.insert(i + 1, f(x[i + 1]))
+        dx[i] = x[i + 1] - x[i]
+        dx.insert(i + 1, x[i + 2] - x[i + 1])
+        y_dot.insert(i + 1, fdot(x[i + 1]))
+        nu = [calculate_nu(i) for i in range(len(y) - 1)]
 
     # найдём минимум
     x_min = x[argmin(y)]
