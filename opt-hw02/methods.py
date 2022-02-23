@@ -481,3 +481,79 @@ def minimize_INL(f, a, b, r, xi, atol=None, maxfev=MAXFEV, full_output=False):
     if not full_output:
         return x_min
     return OptimizeResult(x_min, x, y, len(y))
+
+
+def minimize_DGN(f, fdot, a, b, r, atol=None, maxfev=MAXFEV,
+                 full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум дифференцируемой функции `f` с помощью
+    метода с адаптивным оцениваением глобальной константы Липшица. Точность
+    метода и максимальное количество вызовов функции задаются параметрами
+    `atol` и `maxfev`, соответственно.
+    """
+    def calculate_m(i):
+        dx = x[i + 1] - x[i]
+        alpha = abs(y_dot[i + 1] - y_dot[i]) / dx
+        beta = 2 * (-y[i + 1] + y[i] + y_dot[i] * dx) / dx**2
+        gamma = 2 * (y[i + 1] - y[i] - y_dot[i + 1] * dx) / dx**2
+        return max(alpha, beta, gamma)
+
+    def new_point(i):
+        return ((-y[i + 1] + y[i] + y_dot[i + 1] * x[i + 1] - y_dot[i] * x[i]
+                 + 0.5 * L * (x[i + 1]**2 - x[i]**2))
+                / (L * (x[i + 1] - x[i]) + y_dot[i + 1] - y_dot[i]))
+
+    def characteristic(i):
+        x_hat = new_point(i)
+        return y[i] + y_dot[i] * (x_hat - x[i]) - 0.5 * L * (x_hat - x[i])**2
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+    y_dot = [fdot(a), fdot(b)]
+
+    while True:
+        # оценка константы Липшица для производной
+        m = [calculate_m(i) for i in range(len(y) - 1)]
+        G = max(m)
+        L = 1 if G < 1e-7 else r * G
+
+        # вычисление характеристик
+        R = [characteristic(i) for i in range(len(y) - 1)]
+
+        # выбор интервала для разбиения
+        i = argmin(R)
+
+        # условия остановки
+        if x[i + 1] - x[i] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+        # новое испытание
+        x.insert(i + 1, new_point(i))
+        y.insert(i + 1, f(x[i + 1]))
+        y_dot.insert(i + 1, fdot(x[i + 1]))
+
+    # найдём минимум
+    x_min = x[argmin(y)]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    # возвращаем график миноранты
+    x_hat = [new_point(i) for i in range(len(y) - 1)]
+    x_full = []
+    y_full = []
+    for i in range(len(y) - 1):
+        x_full.append(x[i])
+        x_full.append(x_hat[i])
+        y_full.append(y[i])
+        y_full.append(R[i])
+    x_full.append(x[-1])
+    y_full.append(y[-1])
+    return OptimizeResult(x_min, x_full, y_full, len(y))
