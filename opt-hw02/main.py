@@ -1,14 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from test_functions import test_functions
-from methods import minimize_DGS
+from methods import minimize_DLS
 
 
 def main():
     for i, tf in enumerate(test_functions):
         a, b = tf.interval
         eps = 1e-4 * (b - a)
-        res = minimize_DGS(tf.f, tf.fdot, a, b, r=1.11, xi=1e-9,
+        res = minimize_DLS(tf.f, tf.fdot, a, b, r=1.11, xi=1e-9,
                            atol=eps, full_output=True)
         print(i + 1, res.nfev)
         x = np.linspace(a, b, 500)
