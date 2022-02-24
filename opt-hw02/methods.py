@@ -673,3 +673,115 @@ def minimize_DLN(f, fdot, a, b, r, xi, atol=None, maxfev=MAXFEV,
     x_full.append(x[-1])
     y_full.append(y[-1])
     return OptimizeResult(x_min, x_full, y_full, len(y))
+
+
+def minimize_DGS(f, fdot, a, b, r, xi, atol=None, maxfev=MAXFEV,
+                 full_output=False):
+    """
+    Найти на отрезке [`a`, `b`] минимум дифференцируемой функции `f` с помощью
+    метода с адаптивным оцениваением глобальной константы Липшица для
+    производной, использующий гладкие миноранты. Точность метода и максимальное
+    количество вызовов функции задаются параметрами `atol` и `maxfev`,
+    соответственно.
+    """
+    def calculate_nu(i):
+        d = np.sqrt((2 * (y[i] - y[i + 1])
+                     + (y_dot[i + 1] + y_dot[i]) * dx[i])**2
+                    + (y_dot[i + 1] - y_dot[i])**2 * dx[i]**2)
+        return (abs(2 * (y[i] - y[i + 1])
+                    + (y_dot[i + 1] + y_dot[i]) * dx[i]) + d) / dx[i]**2
+
+    def calculate_pi(arg, m, b, c):
+        return 0.5 * m * arg**2 + b * arg + c
+
+    def calculate_pi_prime(arg, m, b):
+        return m * arg + b
+
+    def characteristic(i):
+        # точки пересечения вспомогательных функций
+        delta_1 = dx[i] / 4 + (y_dot[i + 1] - y_dot[i]) / (4 * m[i])
+        delta_2 = ((y[i] - y[i + 1]
+                    + y_dot[i + 1] * x[i + 1]
+                    - y_dot[i] * x[i]
+                    + 0.5 * m[i] * (x[i + 1]**2 - x[i]**2))
+                   / (m[i] * dx[i] + y_dot[i + 1] - y_dot[i]))
+        u[i] = delta_1 + delta_2
+        u_prime[i] = -delta_1 + delta_2
+
+        # ограничивающая парабола
+        b = y_dot[i + 1] - 2 * m[i] * u[i] + m[i] * x[i + 1]
+        c = (y[i + 1] - y_dot[i + 1] * x[i + 1]
+             - 0.5 * m[i] * x[i + 1]**2 + m[i] * u[i]**2)
+        piprime_u = calculate_pi_prime(u[i], m[i], b)
+        piprime_uprime = calculate_pi_prime(u_prime[i], m[i], b)
+
+        # характеристика зависит от положения минимума параболы
+        if piprime_u * piprime_uprime < 0:
+            x_hat[i] = 2 * u[i] - x[i + 1] - y_dot[i + 1] / m[i]
+            psi = calculate_pi(x_hat[i], m[i], b, c)
+            W.add(i)
+            return min(y[i], psi, y[i + 1])
+        else:
+            if y[i] < y[i + 1]:
+                U_prime.add(i)
+                return y[i]
+            U.add(i)
+            return y[i + 1]
+
+    # точность по умолчанию
+    if atol is None:
+        atol = (b - a) * 1e-4
+
+    x = [a, b]
+    y = [f(a), f(b)]
+    y_dot = [fdot(a), fdot(b)]
+    dx = [b - a]
+
+    while True:
+        # оценка глобальной константы Липшица для производной
+        nu = [calculate_nu(i) for i in range(len(y) - 1)]
+        m = [r * max(xi, max(nu))] * (len(y) - 1)
+
+        # вычисление характеристик
+        W = set()
+        U = set()
+        U_prime = set()
+        u = [None] * (len(y) - 1)
+        u_prime = [None] * (len(y) - 1)
+        x_hat = [None] * (len(y) - 1)
+        R = [characteristic(i) for i in range(len(y) - 1)]
+        # последняя комманда заполняет все инициализированные массивы
+
+        # выбор интервала для разбиения
+        t = argmin(R)
+
+        # выбор точки для нового испытания
+        if t in U_prime:
+            x_new = u_prime[t]
+        elif t in W:
+            x_new = x_hat[t]
+        else:
+            assert t in U
+            x_new = u[t]
+
+        # новое испытание
+        x.insert(t + 1, x_new)
+        y.insert(t + 1, f(x[t + 1]))
+        dx[t] = x[t + 1] - x[t]
+        dx.insert(t + 1, x[t + 2] - x[t + 1])
+        y_dot.insert(t + 1, fdot(x[t + 1]))
+
+        # условия остановки
+        if dx[t] <= atol:
+            break
+        if len(y) >= maxfev:
+            raise Exception(
+                f'Решение не сошлось после {maxfev} вызовов целевой функции.')
+
+    # найдём минимум
+    x_min = x[argmin(y)]
+
+    # возвращаем результат
+    if not full_output:
+        return x_min
+    return OptimizeResult(x_min, x, y, len(y))
