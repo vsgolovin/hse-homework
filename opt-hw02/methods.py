@@ -21,7 +21,7 @@ def argmax(iterable):
 
 def argmin(iterable):
     """
-    Возвращает индекс максимального элемента.
+    Возвращает индекс минимального элемента.
     """
     i_min = None
     x_min = None
