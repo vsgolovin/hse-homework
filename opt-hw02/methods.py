@@ -851,7 +851,7 @@ def minimize_DLS(f, fdot, a, b, r, xi, atol=None, maxfev=MAXFEV,
 
     while True:
         # оценка глобальной константы Липшица для производной
-        nu = [calculate_nu(i) for i in range(len(y) - 1)]
+        nu = [r * calculate_nu(i) for i in range(len(y) - 1)]
         lam = [None] * len(nu)
         for j in range(len(lam)):
             j1 = max(0, j - 1)
@@ -892,7 +892,7 @@ def minimize_DLS(f, fdot, a, b, r, xi, atol=None, maxfev=MAXFEV,
         y_dot.insert(t + 1, fdot(x[t + 1]))
 
         # условия остановки
-        if min(dx[t:t + 2]) <= atol:
+        if dx[t + 1] <= atol:
             break
         if len(y) >= maxfev:
             raise Exception(
