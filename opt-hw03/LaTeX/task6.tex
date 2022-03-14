@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage[utf8]{inputenc}   % поддержка UTF8
+\usepackage[T2A]{fontenc}     % внутренняя T2A кодировка TeX
+\usepackage[english, russian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+
+\begin{document}
+\section*{Задание №6: Градиентный метод}
+
+\begin{equation*}
+    \vec{x}_{k+1} =
+        \vec{x}_k
+        - h_k \Delta f (\vec{x}_k).
+\end{equation*}
+
+Реализовать 3 способа выбора $h_k$:
+\begin{enumerate}
+    \item Находим $h_k$ из условия минимума (метод золотого сечения).
+    \item Положить $h_k = \text{const}$.
+    \item Использовать условие:
+    \begin{equation*}
+        \alpha \langle \nabla f(\vec{x}_k), \vec{x}_{k+1} - \vec{x}_k \rangle
+        \leqslant f(\vec{x}_k) - f(\vec{x}_{k+1})
+        \leqslant \beta \langle \nabla f(\vec{x}_k), \vec{x}_{k+1} - \vec{x}_k \rangle
+    \end{equation*}
+    c $0 < \alpha < \beta < 1$.
+\end{enumerate}
+
+
+\subsection*{Тестовые функции}
+
+\begin{itemize}
+    \item{}
+        Выпуклая функция (квадратичная)
+        \begin{equation*}
+            f(x_1, x_2) = 100 \left(x_1 - x_2\right)^2
+                          + 5 \sum_{j=2}^{n}\left(1 - x_j\right)^2.
+        \end{equation*}
+        Попробовать $n$ = 2, 3, 5, 10.
+    \item{}
+        Функция Розенброка
+        \begin{equation*}
+            f(x_1, x_2) = 100 \left(x_2 - x_1^2\right)^2
+                          + 5\left(1 - x_1\right)^2.
+        \end{equation*}
+        \begin{equation*}
+            \vec{x}^* =
+            \begin{pmatrix}1\\1\end{pmatrix}, \qquad f^* = 0.
+        \end{equation*}
+        Принять $\vec{x}_0 = \vec{0}$.
+
+        Для $n = 2$ построить на плоскости $(x_1, x_2)$ траекторию
+        последовательных приближений $\{\vec{x}_k\}$ (соединить соседние
+        точки ломаной).
+\end{itemize}
+
+\end{document}
