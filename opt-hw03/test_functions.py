@@ -6,7 +6,7 @@ def quadratic(*args):
 def quadratic_derivatives(*args):
     derivatives = [
         200 * (args[0] - args[1]),
-        -200 * (args[0] - args[1] - 10 * (1 - args[1]))
+        -200 * (args[0] - args[1]) - 10 * (1 - args[1])
     ]
     return derivatives + [-10 * (1 - xi) for xi in args[2:]]
 
