@@ -46,17 +46,22 @@ def gradient_descent(f, grad_f, x0, h_method='min', grad_min=1e-4,
     solutions = [x.copy()]             # все решения
     grad = np.array(grad_f(*x))        # градиент в текущей точке
     grad_norm = np.linalg.norm(grad)
+    f_x = f(*x)
 
     # обновляем ответ, пока норма градиента не станет достаточно малой
     while grad_norm > grad_min:
         if h_method == 'min':
             # поиск h из условия минимума
-            h = golden_section_search(
-                lambda h: f(*(x_i - h * grad_x_i
-                            for x_i, grad_x_i in zip(x, grad))),
-                a=0,
-                b=1
-            )
+            h = 1.0
+            while True:
+                h = golden_section_search(
+                    lambda h: f(*(x_i - h * grad_x_i
+                                for x_i, grad_x_i in zip(x, grad))),
+                    a=0,
+                    b=h
+                )
+                if f(*(x - h * grad)) < f_x:
+                    break
         elif isinstance(h_method, (int, float)):
             # постоянное значение h
             h = h_method
@@ -65,7 +70,6 @@ def gradient_descent(f, grad_f, x0, h_method='min', grad_min=1e-4,
             assert len(h_method) == 2
             alpha = h_method[0]
             beta = h_method[1]
-            f_x = f(*x)
             h_min, h_max = 0, 1
             h = 1
 
@@ -82,6 +86,7 @@ def gradient_descent(f, grad_f, x0, h_method='min', grad_min=1e-4,
                 h = h_min + (h_max - h_min) / 2
 
         x -= h * grad
+        f_x = f(*x)
         grad = np.array(grad_f(*x))
         grad_norm = np.linalg.norm(grad)
         solutions.append(x.copy())
