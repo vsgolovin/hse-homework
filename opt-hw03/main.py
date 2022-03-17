@@ -56,7 +56,7 @@ sol = gradient_descent(tf.rosenbrock, tf.rosenbrock_derivatives, x0,
                        h_method='min', return_solutions=True)
 fig = plt.figure('Rosenbrock function')
 ax = fig.add_subplot()
-cn = ax.contourf(*mesh, tf.quadratic(*mesh), levels=20)
+cn = ax.contourf(*mesh, tf.rosenbrock(*mesh), levels=20)
 cb = fig.colorbar(cn)
 sol = np.array(sol)
 ax.plot(sol[:, 0], sol[:, 1], 'r-', lw=0.5)

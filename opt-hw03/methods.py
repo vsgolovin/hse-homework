@@ -42,6 +42,11 @@ def golden_section_search(f, a, b, atol=None):
 
 def gradient_descent(f, grad_f, x0, h_method='min', grad_min=1e-4,
                      return_solutions=False):
+    """
+    Найти минимум функции `f` с градентом `grad_f` с помощью метода
+    градиентного спуска. Параметр `h_method` определяет способ выбора
+    коэффициента `h` (x <- x - h * grad_f).
+    """
     x = np.array(x0, dtype='float64')  # текущее решение
     solutions = [x.copy()]             # все решения
     grad = np.array(grad_f(*x))        # градиент в текущей точке
