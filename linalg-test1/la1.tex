@@ -295,14 +295,53 @@ $A^+ = (A^TA)^{-1}A^T$.
     \begin{equation*}
         P =
         \begin{bmatrix}
-            -2 & -1 & 0 & 0\\
+            -2 & -1 & 0 & 1\\
             -10 & -10 & 16 & -20
         \end{bmatrix}
     \end{equation*}
 \end{problem}
 
+Интерполяционный многочлен Лагранжа $L(x)$ определяется следующим образом:
+\begin{equation*}
+    L(x) = \sum_{i=0}^{n}{l_i(x) y_i}, \qquad
+    l_i(x) = \prod_{
+        \substack{0 \leq j \leq n\\i \neq j}
+    }{
+        \frac{x - x_j}{x_i - x_j}
+    }.
+\end{equation*}
+
+Итак, коэффициенты разложения:
+\begin{equation*}
+    l_0(x) = \frac{(x + 1)x(x - 1)}{(-2 + 1)(-2 - 0)(-2 - 1)} =
+    \frac{x(x^2 - 1)}{-6}
+\end{equation*}
+\begin{equation*}
+    l_1(x) = \frac{(x + 2)x(x-1)}{(-1 + 2)(-1)(-1 - 1)} =
+    \frac{x(x-1)(x+2)}{2}
+\end{equation*}
+\begin{equation*}
+    l_2(x) = \frac{(x + 2)(x + 1)(x - 1)}{2 \cdot 1 \cdot (-1)} =
+    \frac{(x^2-1)(x+2)}{-2}
+\end{equation*}
+\begin{equation*}
+    l_3(x) = \frac{(x + 2)(x + 1) x}{(1 + 2)(1 + 1)(1 - 0)} =
+    \frac{x(x+1)(x+2)}{6}
+\end{equation*}
+
+Подставив эти коэффициенты в формулу для $L(x)$, и упростив выражение, получим
+\begin{equation*}
+    L(x) = -\frac{44}{3}x^3 - 31x^2 + \frac{29}{3}x + 16.
+\end{equation*}
+
+\begin{figure}[hbt]
+    \centering
+    \includegraphics*[scale=1.0]{./figures/ex3.pdf}
+    \caption{Интерполяционный многочлен Лагранжа}
+\end{figure}
 
 % 4
+\newpage
 \begin{problem}
     Построить график и найти (параметрически) уравнение кривой Безье, заданной
     четырьмя точками, координаты которых образуют столбцы матрицы
