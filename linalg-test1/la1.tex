@@ -396,12 +396,41 @@ $A^+ = (A^TA)^{-1}A^T$.
 \newpage
 \input{ex4.tex}
 
+
 % 5
 \newpage
 \begin{problem}
     Для многочлена $x^3 - 4x^2 + 4x - 5$ найти наилучшее приближение по
     max-норме многочленом степени $2$ на отрезке $[0, 4]$.
 \end{problem}
+
+Наилучшее приближение $g(x)$ многочлена $f(x)$ по max-норме на отрезке $[a, b]$
+можно найти из условия:
+\begin{equation*}
+    f(x) - g(x) = c_0 \frac{(b - a)^n}{2^{2n-1}}
+                  T_n\left(\frac{2x - a - b}{b - a}\right),
+\end{equation*}
+где $c_0$ -- коэффициент перед $x^n$ в исходной функции $f(x)$,
+$T_n$ -- многочлен Чебышёва.
+
+Обозначим $u = (2x - a - b) / (b - a) = (x - 2) / 2$, тогда
+\begin{gather*}
+    T_n(u) = T_3(u) = 4x^3 - 3u\\
+    u^3 = \frac{1}{8} (x - 2)^3 = \frac{1}{8} (x^3 - 6x^2 + 12x - 8)\\
+    T_3(u) = 0.5 (x^3 - 6x^2 + 12x - 8) - 1.5 (x - 2) =
+    0.5x^3 - 3x^2 + 4.5x - 1\\
+    f(x) - g(x) = 1 \cdot \frac{4^3}{2^5} (0.5x^3 - 3x^2 + 4.5x + 1) =
+    x^3 - 6x^2 + 9x - 2\\
+    g(x) = x^3 - 4x^2 + 4x - 5 - x^3 + 6x^2 - 9x + 2 =
+    2x^2 - 5x - 3
+\end{gather*}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics*[scale=1.0]{./figures/ex5.pdf}
+    \caption{Исходный многочлен 3 степени $f(x)$ и его наилучшее приближение
+    многочленом 2 степени $g(x)$}
+\end{figure}
 
 
 % 6
@@ -422,6 +451,8 @@ $A^+ = (A^TA)^{-1}A^T$.
         \end{pmatrix}
     \end{equation*}
 \end{problem}
+
+[\ldots]
 
 
 % 7
