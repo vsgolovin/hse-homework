@@ -446,7 +446,7 @@
 \end{Verbatim}
 \end{tcolorbox}
 
-    \newpage
+    \newpage 
     Построим их графики:
 
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
@@ -464,7 +464,7 @@
             \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
 \prompt{Out}{outcolor}{3}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}]
-<mpl\_toolkits.mplot3d.art3d.Poly3DCollection at 0x7efbea10c0a0>
+<mpl\_toolkits.mplot3d.art3d.Poly3DCollection at 0x7f3c0dba6a90>
 \end{Verbatim}
 \end{tcolorbox}
         
@@ -634,47 +634,43 @@
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{7}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}]
-\PY{n}{mesh} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{meshgrid}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
-\PY{n}{x0} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{0.0}\PY{p}{,} \PY{l+m+mf}{0.0}\PY{p}{]}
+\PY{n}{sol} \PY{o}{=} \PY{n}{broyden}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+              \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{restart\PYZus{}period}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Квадратичная функция, n = 2:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{fig}\PY{p}{,} \PY{p}{[}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{]} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{n}{ncols}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{set\PYZus{}size\PYZus{}inches}\PY{p}{(}\PY{l+m+mi}{9}\PY{p}{,} \PY{l+m+mf}{3.5}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{broyden}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{*} \PY{l+m+mi}{5}\PY{p}{,}
+              \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{restart\PYZus{}period}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Квадратичная функция, n = 5:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{sol} \PY{o}{=} \PY{n}{broyden}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-              \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{p}{(}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{l+m+mf}{0.9}\PY{p}{)}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax1}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{quadratic}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax1}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Квадратичная функция,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-
-\PY{n}{sol} \PY{o}{=} \PY{n}{broyden}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-              \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{p}{(}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{l+m+mf}{0.9}\PY{p}{)}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax2}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{rosenbrock}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax2}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Функция Розенброка,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{broyden}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+              \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{min}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{restart\PYZus{}period}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Функция Розенброка:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
 
-            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
-\prompt{Out}{outcolor}{7}{\boxspacing}
-\begin{Verbatim}[commandchars=\\\{\}]
-Text(0.5, 1.0, 'Функция Розенброка,\textbackslash{}n556 итераций')
-\end{Verbatim}
-\end{tcolorbox}
-        
-    \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_10_1.png}
-    \end{center}
-    { \hspace*{\fill} \\}
+    \begin{Verbatim}[commandchars=\\\{\}]
+Квадратичная функция, n = 2:
+x = [1. 1.]
+число итераций: 3
 
+Квадратичная функция, n = 5:
+x = [1. 1. 1. 1. 1.]
+число итераций: 4
+
+Функция Розенброка:
+x = [0.99955512 0.99910615]
+число итераций: 278
+    \end{Verbatim}
 
 \newpage
     \hypertarget{ux43cux435ux442ux43eux434-ux434ux430ux432ux438ux434ux43eux43dux430-ux444ux43bux435ux442ux447ux435ux440ux430-ux43fux430ux443ux44dux43bux43bux430}{%
-\section{Метод
-Давидона-Флетчера-Пауэлла,}\label{ux43cux435ux442ux43eux434-ux434ux430ux432ux438ux434ux43eux43dux430-ux444ux43bux435ux442ux447ux435ux440ux430-ux43fux430ux443ux44dux43bux43bux430}}
+\section{Метод Давидона-Флетчера-Пауэлла}\label{ux43cux435ux442ux43eux434-ux434ux430ux432ux438ux434ux43eux43dux430-ux444ux43bux435ux442ux447ux435ux440ux430-ux43fux430ux443ux44dux43bux43bux430}}
 
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{8}{\boxspacing}
@@ -719,39 +715,40 @@ Text(0.5, 1.0, 'Функция Розенброка,\textbackslash{}n556 ите�
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{9}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}]
-\PY{n}{fig}\PY{p}{,} \PY{p}{[}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{]} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{n}{ncols}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{set\PYZus{}size\PYZus{}inches}\PY{p}{(}\PY{l+m+mi}{9}\PY{p}{,} \PY{l+m+mf}{3.5}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{dfp}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+          \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Квадратичная функция, n = 2:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{sol} \PY{o}{=} \PY{n}{dfp}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-          \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mf}{0.05}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax1}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{quadratic}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax1}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Квадратичная функция,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{dfp}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{*} \PY{l+m+mi}{5}\PY{p}{,}
+          \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Квадратичная функция, n = 5:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{sol} \PY{o}{=} \PY{n}{dfp}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-          \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax2}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{rosenbrock}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax2}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Функция Розенброка,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{dfp}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+          \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Функция Розенброка:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
 
-            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
-\prompt{Out}{outcolor}{9}{\boxspacing}
-\begin{Verbatim}[commandchars=\\\{\}]
-Text(0.5, 1.0, 'Функция Розенброка,\textbackslash{}n145 итераций')
-\end{Verbatim}
-\end{tcolorbox}
-        
-    \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_13_1.png}
-    \end{center}
-    { \hspace*{\fill} \\}
+    \begin{Verbatim}[commandchars=\\\{\}]
 
+Квадратичная функция, n = 2:
+x = [1.00000001 0.99999999]
+число итераций: 5
+
+Квадратичная функция, n = 5:
+x = [0.9999999  1.00000005 1.00000052 1.00000052 1.00000052]
+число итераций: 7
+
+Функция Розенброка:
+x = [0.99996776 0.99993307]
+число итераций: 122
+    \end{Verbatim}
 
 \newpage
     \hypertarget{ux43cux435ux442ux43eux434-ux431ux440ux43eux439ux434ux435ux43dux430-ux444ux43bux435ux442ux447ux435ux440ux430-ux433ux43eux43bux44cux434ux444ux430ux440ux431ux430-ux448ux435ux43dux43dux43e}{%
@@ -803,39 +800,41 @@ Text(0.5, 1.0, 'Функция Розенброка,\textbackslash{}n145 ите�
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{11}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}]
-\PY{n}{fig}\PY{p}{,} \PY{p}{[}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{]} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{n}{ncols}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{set\PYZus{}size\PYZus{}inches}\PY{p}{(}\PY{l+m+mi}{9}\PY{p}{,} \PY{l+m+mf}{3.5}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{bfgs}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+           \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Квадратичная функция, n = 2:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{sol} \PY{o}{=} \PY{n}{bfgs}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-           \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax1}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{quadratic}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax1}\PY{p}{)}
-\PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Квадратичная функция,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{bfgs}\PY{p}{(}\PY{n}{quadratic}\PY{p}{,} \PY{n}{quadratic\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{*} \PY{l+m+mi}{5}\PY{p}{,}
+           \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Квадратичная функция, n = 5:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 
-\PY{n}{sol} \PY{o}{=} \PY{n}{bfgs}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{n}{x0}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,}
-           \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-\PY{n}{cn} \PY{o}{=} \PY{n}{ax2}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{,} \PY{n}{rosenbrock}\PY{p}{(}\PY{o}{*}\PY{n}{mesh}\PY{p}{)}\PY{p}{,} \PY{n}{levels}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{coolwarm}\PY{p}{)}
-\PY{n}{sol} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{sol}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{sol}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
-\PY{n}{fig}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{cn}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax2}\PY{p}{)}
-\PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Функция Розенброка,}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{ итераций}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{sol} \PY{o}{=} \PY{n}{bfgs}\PY{p}{(}\PY{n}{rosenbrock}\PY{p}{,} \PY{n}{rosenbrock\PYZus{}derivatives}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+           \PY{n}{h\PYZus{}method}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{grad\PYZus{}min}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}3}\PY{p}{,} \PY{n}{full\PYZus{}output}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{Функция Розенброка:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x = }\PY{l+s+si}{\PYZob{}}\PY{n}{sol}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{число итераций: }\PY{l+s+si}{\PYZob{}}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sol}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
 
-            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
-\prompt{Out}{outcolor}{11}{\boxspacing}
-\begin{Verbatim}[commandchars=\\\{\}]
-Text(0.5, 1.0, 'Функция Розенброка,\textbackslash{}n559 итераций')
-\end{Verbatim}
-\end{tcolorbox}
-        
-    \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_16_1.png}
-    \end{center}
-    { \hspace*{\fill} \\}
-    
+    \begin{Verbatim}[commandchars=\\\{\}]
+
+Квадратичная функция, n = 2:
+x = [1. 1.]
+число итераций: 5
+
+Квадратичная функция, n = 5:
+x = [0.99999451 0.99999478 1.00001413 1.00001413 1.00001413]
+число итераций: 7
+
+Функция Розенброка:
+x = [0.99999961 0.99999896]
+число итераций: 99
+    \end{Verbatim}
+
 
     % Add a bibliography block to the postdoc
     
