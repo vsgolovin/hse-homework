@@ -76,7 +76,8 @@ def filter_hough_circles(A, radii, threshold, min_dist=20):
         heapq.heappush(heap, (-A[i, j, k], (j, i, radii[k])))
 
     circles = []
-    for _, (x0, y0, r) in heap:
+    while heap:
+        _, (x0, y0, r) = heapq.heappop(heap)
         distances = [np.sqrt((xi - x0)**2 + (yi - y0)**2)
                      for xi, yi, _ in circles]
         if not distances or min(distances) > min_dist:
