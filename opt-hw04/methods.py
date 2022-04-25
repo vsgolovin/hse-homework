@@ -4,8 +4,8 @@ import test_functions as tf
 
 def main():
     x0 = [0, 0]
-    sol = bfgs(tf.rosenbrock, tf.rosenbrock_derivatives, x0,
-               h_method=1, grad_min=1e-4, full_output=True)
+    sol = dfp(tf.rosenbrock, tf.rosenbrock_derivatives, x0,
+              h_method='min', grad_min=1e-4, full_output=True)
     print(len(sol))
     print(sol[-1])
 
@@ -49,7 +49,7 @@ def golden_section_search(f, a, b, atol=None):
     return a + (b - a) / 2
 
 
-def choose_h(f, x, grad, h_method):
+def choose_h(f, x, grad, h_method, atol=None):
     if h_method == 'min':
         # поиск h из условия минимума
         h = 1.0
@@ -59,7 +59,8 @@ def choose_h(f, x, grad, h_method):
                 lambda h: f(*(x_i - h * grad_x_i
                             for x_i, grad_x_i in zip(x, grad))),
                 a=0,
-                b=h
+                b=h,
+                atol=atol
             )
             if f(*(x - h * grad)) < f_x:
                 break
@@ -77,7 +78,9 @@ def choose_h(f, x, grad, h_method):
         h = 1
 
         # двоичный поиск
-        while True:
+        if atol is None:
+            atol = 1e-4
+        while h_max - h_min > atol:
             decrease = f_x - f(*(x - grad * h))
             dot_product = grad_norm**2 * h
             if alpha * dot_product > decrease:
@@ -107,10 +110,11 @@ def broyden(f, fdot, x0, h_method=1e-3, grad_min=1e-4, restart_period=1,
             H = np.eye(n)
             num_iterations = 0
 
-        h = choose_h(f, x, grad, h_method)
+        delta = np.dot(H, grad)
+        h = choose_h(f, x, delta, h_method)
 
         # обновляем решение
-        delta = -h * np.dot(H, grad)
+        delta *= -h
         x += delta
         solutions.append(x.copy())
         g_new = np.array(fdot(*x))
@@ -142,10 +146,11 @@ def dfp(f, fdot, x0, h_method=1.0, grad_min=1e-4, maxiter=10000,
     solutions = [x.copy()]           # все решения
 
     while np.linalg.norm(grad) >= grad_min:
-        h = choose_h(f, x, grad, h_method)
+        delta = np.dot(H, grad)
+        h = choose_h(f, x, delta, h_method)
 
         # обновляем решение
-        delta = -h * np.dot(H, grad)
+        delta *= -h
         x += delta
         solutions.append(x.copy())
         g_new = np.array(fdot(*x))
@@ -177,10 +182,11 @@ def bfgs(f, fdot, x0, h_method=1.0, grad_min=1e-4, maxiter=10000,
     solutions = [x.copy()]           # все решения
 
     while np.linalg.norm(grad) >= grad_min:
-        h = choose_h(f, x, grad, h_method)
+        delta = np.dot(H, grad)
+        h = choose_h(f, x, delta, h_method)
 
         # обновляем решение
-        delta = -h * np.dot(H, grad)
+        delta *= -h
         x += delta
         solutions.append(x.copy())
         g_new = np.array(fdot(*x))
@@ -189,10 +195,10 @@ def bfgs(f, fdot, x0, h_method=1.0, grad_min=1e-4, maxiter=10000,
 
         # обновляем H
         u = np.dot(H, gamma)
-        m = np.dot(u, gamma)
+        m = np.dot(delta, gamma)
         G = np.outer(u, delta)
-        H += (1 / m * (G + G.T)
-              - 1 / m * (1 + np.dot(gamma, delta) / m) * np.outer(u, u))
+        H += ((m + np.dot(gamma, u)) / m**2 * np.outer(delta, delta)
+              - (G + G.T) / m)
 
         # проверяем полное число итераций
         if len(solutions) >= maxiter:
