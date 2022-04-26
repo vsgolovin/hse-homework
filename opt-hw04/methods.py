@@ -160,7 +160,7 @@ def dfp(f, fdot, x0, h_method=1.0, grad_min=1e-4, maxiter=10000,
         # обновляем H
         u = np.dot(H, gamma)
         H += (1 / np.dot(gamma, delta) * np.outer(delta, delta)
-              - 1 / np.dot(u, gamma) * np.outer(np.dot(H, gamma), u))
+              - 1 / np.dot(u, gamma) * np.outer(u, u))
 
         # проверяем полное число итераций
         if len(solutions) >= maxiter:
