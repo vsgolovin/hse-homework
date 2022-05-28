@@ -1,5 +1,8 @@
 dl-hw03/results
 
+# Torchtext downloaded embeddings
+.vector_cache/
+
 # VisualStudio settings
 .vscode/
 
