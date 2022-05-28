@@ -10,42 +10,75 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import matplotlib.pyplot as plt
 
 
-EMB_DIM = 300
-HIDDEN_SIZE = 300
-FC_SIZE = 400
 BATCH_SIZE = 128
 LEARNING_RATE = 1e-4
-EPOCHS = 25
 
 
 def main():
-    tokenizer = get_tokenizer('basic_english')
-    embeddings_full = tvcb.GloVe('840B', dim=EMB_DIM)
+    # load datasets
     train_dataset = SST2(split='train')
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE,
                                   shuffle=True)
     val_dataset = SST2(split='dev')
     val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
 
-    vocab, embeddings = get_vocab_embeddings(train_dataset, tokenizer,
-                                             embeddings_full)
-
+    # select device and tokenizer (shared between models)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    lstm = RNNClassifier(
+    tokenizer = get_tokenizer('basic_english')
+
+    # teacher model
+    vocab, embeddings = get_vocab_embeddings(
+        dataset=train_dataset,
+        tokenizer=tokenizer,
+        vectors=tvcb.GloVe('840B', dim=300)
+    )
+    teacher = RNNClassifier(
         tokenizer=tokenizer,
         vocab=vocab,
-        input_size=EMB_DIM,
-        hidden_size=HIDDEN_SIZE,
+        input_size=300,
+        hidden_size=200,
         embeddings=embeddings,
         rnn='LSTM',
         lstm_bidirectional=True,
-        rnn_linear_dim=FC_SIZE
+        rnn_linear_dim=400
     )
-    lstm.to(device)
-    t_loss, t_acc, v_loss, v_acc = train(lstm, train_dataloader,
-                                         val_dataloader, device, EPOCHS)
+    teacher.to(device)
+    _, _, v_loss, v_acc = train(
+        teacher, train_dataloader, val_dataloader, device,
+        epochs=50, display_progress=False)
+    print(f'Teacher best accuracy: {max(v_acc)*100:.1f}%')
 
-    epochs = np.arange(1, EPOCHS + 1)
+    # student model
+    vocab, embeddings = get_vocab_embeddings(
+        dataset=train_dataset,
+        tokenizer=tokenizer,
+        vectors=tvcb.GloVe('6B', dim=50)
+    )
+    student = RNNClassifier(
+        tokenizer=tokenizer,
+        vocab=vocab,
+        input_size=50,
+        hidden_size=40,
+        embeddings=embeddings,
+        rnn='RNN',
+        rnn_linear_dim=80
+    )
+    student.to(device)
+    initial_params = student.state_dict()
+    _, _, _, v_acc = train(
+        student, train_dataloader, val_dataloader, device,
+        epochs=50, display_progress=False)
+    print(f'Student best accuracy (regular training): {max(v_acc)*100:.1f}%')
+
+    # distilllation
+    epochs = 100
+    student.load_state_dict(initial_params)  # reset weights
+    t_loss, t_acc, v_loss, v_acc = distill(
+        student, teacher, train_dataloader, val_dataloader, device, alpha=0.5,
+        epochs=epochs, load_best=False, display_progress=False)
+    print(f'Student best accuracy (distillation): {max(v_acc)*100:.1f}%')
+
+    epochs = np.arange(1, epochs + 1)
     fig, [ax1, ax2] = plt.subplots(nrows=2, sharex=True)
     fig.set_size_inches(6.0, 6.0)
     ax1.plot(epochs, t_loss, label='train')
@@ -162,7 +195,7 @@ def get_vocab_embeddings(dataset: Dataset,
                                            specials=['<unk>'])
     vocab.set_default_index(vocab['<unk>'])
 
-    embeddings = np.zeros((len(vocab), EMB_DIM))
+    embeddings = np.zeros((len(vocab), vectors.dim))
     for i, word in enumerate(vocab.get_itos()):
         embeddings[i] = vectors[word]
 
@@ -171,8 +204,8 @@ def get_vocab_embeddings(dataset: Dataset,
 
 def train(model: RNNClassifier, train_dataloader: DataLoader,
           val_dataloader: DataLoader, device: torch.device, epochs: int,
-          load_best: bool = True, use_acc: bool = False,
-          display_progress: bool = True
+          lr: float = LEARNING_RATE, load_best: bool = True,
+          use_acc: bool = False, display_progress: bool = True
           ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     train_acc = np.zeros(epochs)
     train_loss = np.zeros_like(train_acc)
@@ -182,7 +215,7 @@ def train(model: RNNClassifier, train_dataloader: DataLoader,
         state_dict_best = model.state_dict()
 
     loss_function = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for i in range(epochs):
         # train loop
         model.train()
@@ -209,7 +242,7 @@ def train(model: RNNClassifier, train_dataloader: DataLoader,
         train_loss[i] /= total
 
         # validation
-        val_acc[i], val_loss[i] = evaluate(model, val_dataloader, device)
+        val_loss[i], val_acc[i] = evaluate(model, val_dataloader, device)
 
         if display_progress:
             print(f'Epoch {i + 1}')
@@ -246,13 +279,83 @@ def evaluate(model: RNNClassifier, dataloader: DataLoader, device: torch.device
     hits += accurate_predictions(logits, y)
     total += len(y)
 
-    return hits / total, total_loss / total
+    return total_loss / total, hits / total
 
 
 def accurate_predictions(logits: torch.tensor,
                          true_labels: torch.tensor) -> float:
     predictions = torch.round(torch.sigmoid(logits)).int()
     return (predictions == true_labels).sum().item()
+
+
+def distill(student: RNNClassifier, teacher: RNNClassifier,
+            train_dataloader: DataLoader, val_dataloader: DataLoader,
+            device: torch.device, alpha: float = 0.5,
+            lr: float = LEARNING_RATE, epochs: int = 50,
+            load_best: bool = True, use_acc: bool = False,
+            display_progress: bool = True
+            ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    train_acc = np.zeros(epochs)
+    train_loss = np.zeros_like(train_acc)
+    val_acc = np.zeros_like(train_acc)
+    val_loss = np.ones_like(train_acc) * np.inf
+    if load_best:
+        state_dict_best = student.state_dict()
+
+    ce_loss_function = nn.BCEWithLogitsLoss()
+    dist_loss_function = nn.MSELoss()
+    optimizer = torch.optim.Adam(student.parameters(), lr=lr)
+    teacher.eval()
+
+    for i in range(epochs):
+        hits, total = 0, 0
+
+        for texts, labels in train_dataloader:
+            # evaluate teacher for logit targets
+            with torch.no_grad():
+                X, _, lengths = teacher.text_to_tensor(texts, labels)
+                target_logits = teacher(X.to(device), lengths)
+
+            # train student
+            student.train()
+            X, y, lengths = student.text_to_tensor(texts, labels)
+            y = y.to(device)
+            logits = student(X.to(device), lengths)
+            ce_loss = ce_loss_function(logits, y.float())
+            dist_loss = dist_loss_function(logits, target_logits)
+            loss = alpha * ce_loss + (1 - alpha) * dist_loss
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # update accuracy and loss
+            hits += accurate_predictions(logits.detach(), y)
+            total += len(y)
+            train_loss[i] += loss.item() * len(y)
+
+        train_acc[i] = hits / total
+        train_loss[i] /= total
+
+        # evaluate student
+        val_loss[i], val_acc[i] = evaluate(student, val_dataloader, device)
+
+        if display_progress:
+            print(f'Epoch {i + 1}')
+            print('train: loss = {:.2e}, accuracy = {:.2f}%'.format(
+                train_loss[i], train_acc[i] * 100))
+            print('validate: loss = {:.2e}, accuracy = {:.2f}%'.format(
+                val_loss[i], val_acc[i] * 100))
+            print()
+
+        if load_best:
+            best_ind = np.argmax(val_acc) if use_acc else np.argmin(val_loss)
+            if best_ind == i:
+                state_dict_best = student.state_dict()
+
+    if load_best:  # load model with best validation accuracy
+        student.load_state_dict(state_dict_best)
+
+    return train_loss, train_acc, val_loss, val_acc
 
 
 if __name__ == '__main__':
