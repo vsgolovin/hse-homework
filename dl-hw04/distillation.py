@@ -1,4 +1,7 @@
 from typing import Callable, Union
+from collections import namedtuple
+from copy import deepcopy
+from tqdm import tqdm
 import numpy as np
 import torch
 from torch import nn
@@ -11,7 +14,8 @@ import matplotlib.pyplot as plt
 
 
 BATCH_SIZE = 128
-LEARNING_RATE = 1e-4
+TrainResult = namedtuple('TrainResult', ('train_loss', 'train_acc',
+                                         'val_loss', 'val_acc'))
 
 
 def main():
@@ -43,10 +47,10 @@ def main():
         rnn_linear_dim=400
     )
     teacher.to(device)
-    _, _, v_loss, v_acc = train(
+    teacher_result = train(
         teacher, train_dataloader, val_dataloader, device,
-        epochs=50, display_progress=False)
-    print(f'Teacher best accuracy: {max(v_acc)*100:.1f}%')
+        lr=2e-5, epochs=50)
+    fig1, _ = display_results(teacher_result)
 
     # student model
     vocab, embeddings = get_vocab_embeddings(
@@ -58,38 +62,25 @@ def main():
         tokenizer=tokenizer,
         vocab=vocab,
         input_size=50,
-        hidden_size=40,
+        hidden_size=30,
         embeddings=embeddings,
         rnn='RNN',
-        rnn_linear_dim=80
+        rnn_linear_dim=60
     )
     student.to(device)
-    initial_params = student.state_dict()
-    _, _, _, v_acc = train(
+    initial_params = deepcopy(student.state_dict())
+    student_result = train(
         student, train_dataloader, val_dataloader, device,
-        epochs=50, display_progress=False)
-    print(f'Student best accuracy (regular training): {max(v_acc)*100:.1f}%')
+        lr=1e-3, epochs=50)
+    fig2, _ = display_results(student_result)
 
     # distilllation
-    epochs = 100
     student.load_state_dict(initial_params)  # reset weights
-    t_loss, t_acc, v_loss, v_acc = distill(
-        student, teacher, train_dataloader, val_dataloader, device, alpha=0.5,
-        epochs=epochs, load_best=False, display_progress=False)
-    print(f'Student best accuracy (distillation): {max(v_acc)*100:.1f}%')
+    distill_result = distill(
+        student, teacher, train_dataloader, val_dataloader, device,
+        alpha=0.5, lr=2e-3, epochs=100)
+    fig3, _ = display_results(distill_result)
 
-    epochs = np.arange(1, epochs + 1)
-    fig, [ax1, ax2] = plt.subplots(nrows=2, sharex=True)
-    fig.set_size_inches(6.0, 6.0)
-    ax1.plot(epochs, t_loss, label='train')
-    ax1.plot(epochs, v_loss, label='validate')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
-    ax2.plot(epochs, t_acc, label='train')
-    ax2.plot(epochs, v_acc, label='validate')
-    ax2.set_ylabel('Accuracy')
-    ax2.set_xlabel('Epoch')
-    plt.tight_layout()
     plt.show()
 
 
@@ -204,19 +195,18 @@ def get_vocab_embeddings(dataset: Dataset,
 
 def train(model: RNNClassifier, train_dataloader: DataLoader,
           val_dataloader: DataLoader, device: torch.device, epochs: int,
-          lr: float = LEARNING_RATE, load_best: bool = True,
-          use_acc: bool = False, display_progress: bool = True
+          lr: float = 1e-4, load_best: bool = True, use_acc: bool = False
           ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     train_acc = np.zeros(epochs)
     train_loss = np.zeros_like(train_acc)
     val_acc = np.zeros_like(train_acc)
     val_loss = np.ones_like(train_acc) * np.inf
     if load_best:
-        state_dict_best = model.state_dict()
+        state_dict_best = deepcopy(model.state_dict())
 
     loss_function = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    for i in range(epochs):
+    for i in tqdm(range(epochs)):
         # train loop
         model.train()
         hits = 0   # accurate predictions
@@ -244,23 +234,15 @@ def train(model: RNNClassifier, train_dataloader: DataLoader,
         # validation
         val_loss[i], val_acc[i] = evaluate(model, val_dataloader, device)
 
-        if display_progress:
-            print(f'Epoch {i + 1}')
-            print('train: loss = {:.2e}, accuracy = {:.2f}%'.format(
-                train_loss[i], train_acc[i] * 100))
-            print('validate: loss = {:.2e}, accuracy = {:.2f}%'.format(
-                val_loss[i], val_acc[i] * 100))
-            print()
-
         if load_best:
             best_ind = np.argmax(val_acc) if use_acc else np.argmin(val_loss)
             if best_ind == i:
-                state_dict_best = model.state_dict()
+                state_dict_best = deepcopy(model.state_dict())
 
     if load_best:  # load model with best validation accuracy
         model.load_state_dict(state_dict_best)
 
-    return train_loss, train_acc, val_loss, val_acc
+    return TrainResult(train_loss, train_acc, val_loss, val_acc)
 
 
 @torch.no_grad()
@@ -274,10 +256,10 @@ def evaluate(model: RNNClassifier, dataloader: DataLoader, device: torch.device
     for texts, labels in dataloader:
         X, y, lengths = model.text_to_tensor(texts, labels)
         X, y = X.to(device), y.to(device)
-    logits = model(X, lengths)
-    total_loss += loss_function(logits, y.float()).item() * len(y)
-    hits += accurate_predictions(logits, y)
-    total += len(y)
+        logits = model(X, lengths)
+        total_loss += loss_function(logits, y.float()).item() * len(y)
+        hits += accurate_predictions(logits, y)
+        total += len(y)
 
     return total_loss / total, hits / total
 
@@ -291,38 +273,37 @@ def accurate_predictions(logits: torch.tensor,
 def distill(student: RNNClassifier, teacher: RNNClassifier,
             train_dataloader: DataLoader, val_dataloader: DataLoader,
             device: torch.device, alpha: float = 0.5,
-            lr: float = LEARNING_RATE, epochs: int = 50,
+            lr: float = 1e-4, epochs: int = 50,
             load_best: bool = True, use_acc: bool = False,
-            display_progress: bool = True
             ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     train_acc = np.zeros(epochs)
     train_loss = np.zeros_like(train_acc)
     val_acc = np.zeros_like(train_acc)
     val_loss = np.ones_like(train_acc) * np.inf
     if load_best:
-        state_dict_best = student.state_dict()
+        state_dict_best = deepcopy(student.state_dict())
 
-    ce_loss_function = nn.BCEWithLogitsLoss()
-    dist_loss_function = nn.MSELoss()
+    ce_lf = nn.BCEWithLogitsLoss()
+    dist_lf = nn.MSELoss()
     optimizer = torch.optim.Adam(student.parameters(), lr=lr)
     teacher.eval()
 
-    for i in range(epochs):
+    for i in tqdm(range(epochs)):
         hits, total = 0, 0
-
         for texts, labels in train_dataloader:
             # evaluate teacher for logit targets
             with torch.no_grad():
-                X, _, lengths = teacher.text_to_tensor(texts, labels)
+                X, y_t, lengths = teacher.text_to_tensor(texts, labels)
                 target_logits = teacher(X.to(device), lengths)
 
             # train student
             student.train()
             X, y, lengths = student.text_to_tensor(texts, labels)
+            assert (y == y_t).all()
             y = y.to(device)
             logits = student(X.to(device), lengths)
-            ce_loss = ce_loss_function(logits, y.float())
-            dist_loss = dist_loss_function(logits, target_logits)
+            ce_loss = ce_lf(logits, y.float())
+            dist_loss = dist_lf(logits, target_logits)
             loss = alpha * ce_loss + (1 - alpha) * dist_loss
             optimizer.zero_grad()
             loss.backward()
@@ -337,25 +318,58 @@ def distill(student: RNNClassifier, teacher: RNNClassifier,
         train_loss[i] /= total
 
         # evaluate student
-        val_loss[i], val_acc[i] = evaluate(student, val_dataloader, device)
+        student.eval()
+        val_loss[i] = 0.0
+        with torch.no_grad():
+            total = 0
+            for texts, labels in val_dataloader:
+                X, y_t, lengths = teacher.text_to_tensor(texts, labels)
+                target_logits = teacher(X.to(device), lengths)
+                X, y, lengths = student.text_to_tensor(texts, labels)
+                assert (y == y_t).all()
+                X, y = X.to(device), y.to(device)
+                logits = student(X, lengths)
+                val_loss[i] += (ce_lf(logits, y.float()).item()
+                                * alpha * len(y))
+                val_loss[i] += (dist_lf(logits, target_logits).item()
+                                * (1 - alpha) * len(y))
+                val_acc[i] += accurate_predictions(logits, y)
+                total += len(y)
 
-        if display_progress:
-            print(f'Epoch {i + 1}')
-            print('train: loss = {:.2e}, accuracy = {:.2f}%'.format(
-                train_loss[i], train_acc[i] * 100))
-            print('validate: loss = {:.2e}, accuracy = {:.2f}%'.format(
-                val_loss[i], val_acc[i] * 100))
-            print()
+        val_acc[i] /= total
+        val_loss[i] /= total
 
         if load_best:
             best_ind = np.argmax(val_acc) if use_acc else np.argmin(val_loss)
             if best_ind == i:
-                state_dict_best = student.state_dict()
+                state_dict_best = deepcopy(student.state_dict())
 
     if load_best:  # load model with best validation accuracy
         student.load_state_dict(state_dict_best)
 
-    return train_loss, train_acc, val_loss, val_acc
+    return TrainResult(train_loss, train_acc, val_loss, val_acc)
+
+
+def display_results(r: TrainResult):
+    print('Accuracy:')
+    print(f'  best: {max(r.val_acc)*100:.1f}%')
+    print(f'  at min loss: {(r.val_acc[np.argmin(r.val_loss)])*100:.1f}%')
+
+    fig, [ax1, ax2] = plt.subplots(ncols=2)
+    fig.set_size_inches(12.0, 4.0)
+    fig.subplots_adjust(left=0.07, right=0.97, bottom=0.15, top=0.95)
+    epochs = np.arange(1, len(r.train_loss) + 1)
+    ax1.plot(epochs, r.train_loss, label='train')
+    ax1.plot(epochs, r.val_loss, label='validate')
+    ax1.set_ylabel('Loss')
+    ax1.set_xlabel('Epoch')
+    ax1.legend()
+    ax2.plot(epochs, r.train_acc*100, label='train')
+    ax2.plot(epochs, r.val_acc*100, label='validate')
+    ax2.set_ylabel('Accuracy')
+    ax2.set_xlabel('Epoch')
+    ax2.legend()
+    return fig, [ax1, ax2]
 
 
 if __name__ == '__main__':
