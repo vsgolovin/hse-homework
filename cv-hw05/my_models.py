@@ -26,9 +26,9 @@ class MyVGG(nn.Module):
                  bn: bool = True):
         super().__init__()
         if not bn:
-            self.features = models.vgg11(pretrained=pretrained).features
+            self.features = models.vgg16(pretrained=pretrained).features
         else:
-            self.features = models.vgg11(pretrained=pretrained).features
+            self.features = models.vgg16_bn(pretrained=pretrained).features
         if freeze_features:
             for param in self.features.parameters():
                 param.requires_grad = False
