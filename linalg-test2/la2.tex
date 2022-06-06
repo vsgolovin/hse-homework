@@ -298,7 +298,53 @@ $x \leftarrow P'x$. Результаты приведены в таблице:
     \end{equation*}
 \end{problem}
 
-\ldots
+Первая итерация метода Якоби:
+\begin{equation*}
+    T_{ij} = T_{23} =
+    \begin{pmatrix}
+        1 & 0 & 0\\
+        0 & 1/\sqrt{2} & -1/\sqrt{2}\\
+        0 & 1/\sqrt{2} & 1/\sqrt{2}
+    \end{pmatrix},
+    \qquad
+    A_1 = T_{23}^T A T_{23} =
+    \begin{pmatrix}
+        4 & \sqrt{2} & 0\\
+        \sqrt{2} & 11 & 0\\
+        0 & 0 & 5
+    \end{pmatrix}
+    \qquad
+    T_1 = E T_{23} = T_{23}
+\end{equation*}
+
+Вторая итерация:
+\begin{equation*}
+    T_{ij} = T_{12} =
+    \begin{pmatrix}
+        0.982 & 0.191 & 0\\
+        -0.191 & 0.982 & 0\\
+        0 & 0 & 1
+    \end{pmatrix},
+    \qquad
+    A_2 = T_{12}^T A_1 T_{12} =
+    \begin{pmatrix}
+        3.725 & 0 & 0\\
+        0 & 11.275 & 0\\
+        0 & 0 & 5
+    \end{pmatrix}
+     = \Lambda,
+\end{equation*}
+\begin{equation*}
+    T_2 = T_1 T_{12} =
+    \begin{pmatrix}
+        0.982 & 0.191 & 0\\
+        -0.135 & 0.694 & -0.707\\
+        -0.135 & 0.694 & 0.707
+    \end{pmatrix}
+    = T
+\end{equation*}
+Диагональные элементы $\Lambda$ -- собственные числа, а соответствующие им
+столбцы $T$ -- собственные векторы матрицы $A$.
 
 
 % 7
