@@ -272,6 +272,7 @@ $x \leftarrow P'x$. Результаты приведены в таблице:
 
 
 % 5
+\newpage
 \begin{problem}
     Найти значение $f(A)$ функции $f(l) = e^{l+2}$, где
     \begin{equation*}
@@ -283,10 +284,49 @@ $x \leftarrow P'x$. Результаты приведены в таблице:
     \end{equation*}
 \end{problem}
 
-\ldots
+Найдём $r(l)$ -- остаток от деления $f(l)$ на аннулирующий многочлен матрицы
+$A$. Для этого численно определим собственные значения этой матрицы:
+$\lambda_1 = 6$, $\lambda_2 = \lambda_3 = 2$. В таком случае
+\begin{equation*}
+    r(l) = \alpha l^2 + \beta l + \gamma
+\end{equation*}
+подчиняется следующим условиям:
+\begin{equation*}
+    \begin{cases}
+        r(\lambda_1) &= f(\lambda_1)\\
+        r(\lambda_2) &= f(\lambda_2)\\
+        r'(\lambda_2) &= f'(\lambda_2)
+    \end{cases}
+    \qquad \implies \qquad
+    \begin{cases}
+        36 \alpha + 6\beta + \gamma &= e^8\\
+        4 \alpha + 2\beta + \gamma &= e^4\\
+        4 \alpha + \beta &= e^4
+    \end{cases}
+\end{equation*}
+
+Решение получившейся системы:
+\begin{equation*}
+    \begin{cases}
+        \alpha = \frac{e^8 - 5e^4}{16} &= 169.248\\
+        \beta = \frac{9e^4 - e^8}{4} &= -622.394\\
+        \gamma = -\beta &= 622.394
+    \end{cases}
+\end{equation*}
+
+Тогда
+\begin{equation*}
+    e^{A+2} = \alpha AA + \beta A + \gamma =
+    \begin{pmatrix}
+        -23028.7 & 5798.1 & -5743.5\\
+        -69577.5 & 17503.6 & -17339.8\\
+        34461.1 & -8669.9 & 8615.3
+    \end{pmatrix}
+\end{equation*}
 
 
 % 6
+\vspace{1em}
 \begin{problem}
     Найти собственные значения методом вращений (метод Якоби) для матрицы
     \begin{equation*}
