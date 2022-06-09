@@ -1,4 +1,5 @@
 dl-hw03/results
+solution.csv
 
 # Torchtext downloaded embeddings
 .vector_cache/
